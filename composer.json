@@ -1,0 +1,58 @@
+{
+    "name": "westel/laravel-license",
+    "description": "A comprehensive Laravel package for license management and feature gating with server-client architecture",
+    "keywords": [
+        "laravel",
+        "license",
+        "licensing",
+        "saas",
+        "feature-gating",
+        "subscription",
+        "validation",
+        "offline-validation"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Westel Team",
+            "email": "support@westel.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1|^8.2",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "firebase/php-jwt": "^6.11",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Westel\\License\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Westel\\License\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Westel\\License\\LicenseServiceProvider"
+            ],
+            "aliases": {
+                "License": "Westel\\License\\Facades\\License"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    }
+}
