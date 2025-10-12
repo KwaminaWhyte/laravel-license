@@ -4,7 +4,7 @@ namespace Westel\License\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Westel\License\Services\LicenseService;
+use Westel\License\Contracts\LicenseServiceInterface;
 use Westel\License\Exceptions\LicenseException;
 
 class LicenseInstallCommand extends Command
@@ -29,9 +29,9 @@ class LicenseInstallCommand extends Command
     /**
      * License service instance
      *
-     * @var LicenseService
+     * @var LicenseServiceInterface
      */
-    protected LicenseService $licenseService;
+    protected LicenseServiceInterface $licenseService;
 
     /**
      * Installation mode
@@ -43,9 +43,9 @@ class LicenseInstallCommand extends Command
     /**
      * Create a new command instance.
      *
-     * @param LicenseService $licenseService
+     * @param LicenseServiceInterface $licenseService
      */
-    public function __construct(LicenseService $licenseService)
+    public function __construct(LicenseServiceInterface $licenseService)
     {
         parent::__construct();
         $this->licenseService = $licenseService;

@@ -3,7 +3,7 @@
 namespace Westel\License\Console;
 
 use Illuminate\Console\Command;
-use Westel\License\Services\LicenseService;
+use Westel\License\Contracts\LicenseServiceInterface;
 use Westel\License\Exceptions\LicenseException;
 use Carbon\Carbon;
 
@@ -28,16 +28,16 @@ class LicenseCheckCommand extends Command
     /**
      * License service instance
      *
-     * @var LicenseService
+     * @var LicenseServiceInterface
      */
-    protected LicenseService $licenseService;
+    protected LicenseServiceInterface $licenseService;
 
     /**
      * Create a new command instance.
      *
-     * @param LicenseService $licenseService
+     * @param LicenseServiceInterface $licenseService
      */
-    public function __construct(LicenseService $licenseService)
+    public function __construct(LicenseServiceInterface $licenseService)
     {
         parent::__construct();
         $this->licenseService = $licenseService;

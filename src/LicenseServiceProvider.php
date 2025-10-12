@@ -5,6 +5,7 @@ namespace Westel\License;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use Westel\License\Contracts\LicenseServiceInterface;
 use Westel\License\Services\LicenseService;
 use Westel\License\Services\ServerLicenseService;
 use Westel\License\Services\ClientLicenseService;
@@ -90,22 +91,37 @@ class LicenseServiceProvider extends ServiceProvider
         $mode = config('license.mode', 'client');
 
         if ($mode === 'server') {
-            // Register ServerLicenseService as both itself and LicenseService
+            // Register ServerLicenseService
             $this->app->singleton(ServerLicenseService::class, function ($app) {
                 return new ServerLicenseService(
                     config('license.server')
                 );
             });
 
+            // Bind interface and concrete class to the same instance
+            $this->app->singleton(LicenseServiceInterface::class, function ($app) {
+                return $app->make(ServerLicenseService::class);
+            });
+
             $this->app->singleton(LicenseService::class, function ($app) {
                 return $app->make(ServerLicenseService::class);
             });
         } else {
-            $this->app->singleton(LicenseService::class, function ($app) {
+            // Register ClientLicenseService
+            $this->app->singleton(ClientLicenseService::class, function ($app) {
                 return new ClientLicenseService(
                     config('license.client'),
                     $app->make(HardwareFingerprintService::class)
                 );
+            });
+
+            // Bind interface and concrete class to the same instance
+            $this->app->singleton(LicenseServiceInterface::class, function ($app) {
+                return $app->make(ClientLicenseService::class);
+            });
+
+            $this->app->singleton(LicenseService::class, function ($app) {
+                return $app->make(ClientLicenseService::class);
             });
         }
     }
