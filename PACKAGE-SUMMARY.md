@@ -9,6 +9,7 @@
 ## 🎯 Key Features
 
 ### Core Capabilities
+
 - ✅ **Dual Mode Architecture** - Works as both license server and client
 - ✅ **Hardware Fingerprinting** - Secure device binding with cross-platform support
 - ✅ **Offline Validation** - JWT-based validation for up to 30 days offline
@@ -20,6 +21,7 @@
 - ✅ **Comprehensive Logging** - Track all validation attempts and access patterns
 
 ### Server Mode Features
+
 - License creation and management
 - Hardware activation tracking
 - JWT offline token generation
@@ -30,6 +32,7 @@
 - Multi-product/multi-tenant support
 
 ### Client Mode Features
+
 - HTTP client with retry mechanism
 - Intelligent caching system
 - Offline mode with JWT validation
@@ -177,20 +180,20 @@ Route::middleware(['license.feature:advanced_reports'])->group(function () {
 
 The package exposes these REST API endpoints:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/license/validate` | Validate license and get offline token |
-| POST | `/api/license/activate` | Activate license on hardware |
-| POST | `/api/license/deactivate` | Deactivate license |
-| POST | `/api/license/heartbeat` | Heartbeat check |
-| GET | `/api/license/status` | Get license status |
-| GET | `/api/license/info/{key}` | Get license information |
-| GET | `/api/license/features` | Get available features |
-| POST | `/api/license/validate-feature` | Validate feature access |
-| GET | `/api/license/tiers` | Get available products |
-| GET | `/api/license/analytics` | Get usage analytics |
-| GET | `/api/license/validation-stats` | Get validation statistics |
-| GET | `/api/license/hardware-info` | Generate hardware fingerprint |
+| Method | Endpoint                        | Description                            |
+| ------ | ------------------------------- | -------------------------------------- |
+| POST   | `/api/license/validate`         | Validate license and get offline token |
+| POST   | `/api/license/activate`         | Activate license on hardware           |
+| POST   | `/api/license/deactivate`       | Deactivate license                     |
+| POST   | `/api/license/heartbeat`        | Heartbeat check                        |
+| GET    | `/api/license/status`           | Get license status                     |
+| GET    | `/api/license/info/{key}`       | Get license information                |
+| GET    | `/api/license/features`         | Get available features                 |
+| POST   | `/api/license/validate-feature` | Validate feature access                |
+| GET    | `/api/license/tiers`            | Get available products                 |
+| GET    | `/api/license/analytics`        | Get usage analytics                    |
+| GET    | `/api/license/validation-stats` | Get validation statistics              |
+| GET    | `/api/license/hardware-info`    | Generate hardware fingerprint          |
 
 ---
 
@@ -387,18 +390,23 @@ composer test
 ## 🎯 Use Cases
 
 ### 1. SaaS License Management
+
 Manage licenses for multiple SaaS products from a central server.
 
 ### 2. Feature Gating
+
 Control access to premium features based on license tier.
 
 ### 3. Multi-Application Licensing
+
 One license server can manage licenses for multiple client applications.
 
 ### 4. Offline-First Applications
+
 Support applications that need to work offline for extended periods.
 
 ### 5. Hardware-Bound Licenses
+
 Bind licenses to specific hardware to prevent unauthorized usage.
 
 ---
@@ -406,16 +414,19 @@ Bind licenses to specific hardware to prevent unauthorized usage.
 ## 🔄 Integration Status
 
 ### westel-admin (Server Mode)
+
 - **Status**: Ready for integration
 - **Role**: License provider
 - **Configuration**: Use existing tables, expose API endpoints
 
 ### westel-pos (Client Mode)
+
 - **Status**: Ready for integration
 - **Role**: License consumer
 - **Stack**: Laravel 8 + Vue.js 2
 
 ### exp (Client Mode)
+
 - **Status**: Ready for integration
 - **Role**: License consumer
 - **Stack**: Laravel 12 + React + Inertia.js
@@ -425,12 +436,14 @@ Bind licenses to specific hardware to prevent unauthorized usage.
 ## 📦 Dependencies
 
 ### Required
+
 - PHP 8.1+
 - Laravel 10.x, 11.x, or 12.x
 - firebase/php-jwt ^6.11
 - guzzlehttp/guzzle ^7.0
 
 ### Optional
+
 - Redis (for better caching)
 - MySQL/PostgreSQL (server mode)
 
@@ -452,9 +465,9 @@ git push origin v1.0.0
 
 ```json
 {
-    "require": {
-        "westel/laravel-license": "^1.0"
-    }
+  "require": {
+    "westel/laravel-license": "^1.0"
+  }
 }
 ```
 
@@ -464,7 +477,7 @@ git push origin v1.0.0
 
 - **Documentation**: See README.md and INSTALLATION.md
 - **Issues**: GitHub Issues
-- **Email**: support@westel.com
+- **Email**: stanleyotabil10@gmail.com
 - **Integration Help**: See INTEGRATION.md
 
 ---

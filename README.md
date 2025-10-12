@@ -284,27 +284,29 @@ License::refresh(): array
 #### POST /api/license/validate
 
 **Request:**
+
 ```json
 {
-    "license_key": "XXXX-XXXX-XXXX-XXXX",
-    "hardware_fingerprint": "abc123...",
-    "product_id": "uuid",
-    "system_info": {}
+  "license_key": "XXXX-XXXX-XXXX-XXXX",
+  "hardware_fingerprint": "abc123...",
+  "product_id": "uuid",
+  "system_info": {}
 }
 ```
 
 **Response:**
+
 ```json
 {
-    "valid": true,
-    "status": "active",
-    "license": {
-        "license_key": "XXXX-XXXX-XXXX-XXXX",
-        "expires_at": "2025-12-31T23:59:59Z",
-        "features": ["feature1", "feature2"]
-    },
-    "offline_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-    "next_validation": "2025-01-13T12:00:00Z"
+  "valid": true,
+  "status": "active",
+  "license": {
+    "license_key": "XXXX-XXXX-XXXX-XXXX",
+    "expires_at": "2025-12-31T23:59:59Z",
+    "features": ["feature1", "feature2"]
+  },
+  "offline_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "next_validation": "2025-01-13T12:00:00Z"
 }
 ```
 
@@ -339,6 +341,7 @@ If you have an existing license system:
 ### License validation fails in offline mode
 
 Check that:
+
 - JWT secret is correctly configured
 - Offline token was generated during last online validation
 - Token has not expired (check `offline_validation_days`)
@@ -361,7 +364,7 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 ## Support
 
-For support, email support@westel.com or open an issue on GitHub.
+For support, email stanleyotabil10@gmail.com or open an issue on GitHub.
 
 ## Credits
 

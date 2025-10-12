@@ -26,6 +26,7 @@ php artisan license:install
 ```
 
 This will guide you through:
+
 - Selecting server or client mode
 - Publishing configuration files
 - Setting up environment variables
@@ -78,6 +79,7 @@ php artisan migrate
 ```
 
 This creates the following tables:
+
 - `products` - Your SaaS products
 - `licenses` - License records
 - `license_activations` - Hardware activations
@@ -165,6 +167,7 @@ php artisan license:check
 ```
 
 This will:
+
 - Contact the license server
 - Validate your license key
 - Cache the result
@@ -330,6 +333,7 @@ php artisan license:check --refresh
 **Problem**: API routes not working
 
 **Solution**:
+
 ```bash
 php artisan route:clear
 php artisan config:clear
@@ -345,6 +349,7 @@ php artisan cache:clear
 **Problem**: Cannot connect to license server
 
 **Solution**:
+
 - Verify `LICENSE_SERVER_URL` is correct
 - Check server is accessible
 - Enable offline mode: `LICENSE_OFFLINE_MODE=true`
@@ -352,6 +357,7 @@ php artisan cache:clear
 **Problem**: License validation fails
 
 **Solution**:
+
 - Check `LICENSE_KEY` and `LICENSE_PRODUCT_ID` are correct
 - Run `php artisan license:check --refresh`
 - Check server logs for errors
@@ -359,6 +365,7 @@ php artisan cache:clear
 **Problem**: Offline validation not working
 
 **Solution**:
+
 - Ensure you validated online at least once (to get JWT token)
 - Check JWT token hasn't expired
 - Verify `LICENSE_OFFLINE_MODE=true`
@@ -386,6 +393,7 @@ After installation:
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/westel/laravel-license
 - Documentation: https://docs.westel.com/laravel-license
-- Email: support@westel.com
+- Email: stanleyotabil10@gmail.com
