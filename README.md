@@ -13,6 +13,8 @@ A comprehensive Laravel package for license management and feature gating with s
 - **RESTful API**: Complete API for external integrations
 - **Middleware**: Easy route and feature protection
 - **Comprehensive Logging**: Track all validation attempts
+- **🎨 UI Components** (Optional): Pre-built React/Inertia.js interface for license management
+- **🔐 Encrypted Storage**: Database-backed license configuration with encryption
 
 ## Installation
 
@@ -34,6 +36,35 @@ Publish and run migrations (Server Mode only):
 php artisan vendor:publish --tag=license-migrations
 php artisan migrate
 ```
+
+## Optional: UI-Based License Management
+
+**NEW!** The package now includes optional UI components for managing license settings through a web interface instead of `.env` files.
+
+See [UI-INSTALLATION.md](UI-INSTALLATION.md) for detailed setup instructions.
+
+**Quick setup:**
+
+```bash
+# Publish UI assets (React/Inertia.js)
+php artisan vendor:publish --tag=license-ui-react
+php artisan vendor:publish --tag=license-controllers
+php artisan vendor:publish --tag=license-config-migration
+php artisan vendor:publish --tag=license-config-model
+
+# Run migration
+php artisan migrate
+
+# Build frontend
+npm run build
+```
+
+Features:
+- 🔐 Encrypted license key storage
+- 🧪 Connection testing
+- 🎨 Beautiful React/Inertia UI
+- 🔄 Live configuration updates
+- ✅ Admin-only access
 
 ## Configuration
 

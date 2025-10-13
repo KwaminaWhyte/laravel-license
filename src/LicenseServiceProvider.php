@@ -53,6 +53,28 @@ class LicenseServiceProvider extends ServiceProvider
             $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
         }
 
+        // Publish client UI components (client mode only)
+        if (config('license.mode') === 'client') {
+            // Publish React components
+            $this->publishes([
+                __DIR__.'/Views/React/License.tsx' => resource_path('js/pages/Settings/License.tsx'),
+            ], 'license-ui-react');
+
+            // Publish client controller
+            $this->publishes([
+                __DIR__.'/Http/Controllers/Client/LicenseSettingsController.php' => app_path('Http/Controllers/Settings/LicenseSettingsController.php'),
+            ], 'license-controllers');
+
+            // Publish license configuration migration and model
+            $this->publishes([
+                __DIR__.'/Database/Migrations/2025_01_10_000001_create_license_configurations_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_license_configurations_table.php'),
+            ], 'license-config-migration');
+
+            $this->publishes([
+                __DIR__.'/Models/LicenseConfiguration.php' => app_path('Models/LicenseConfiguration.php'),
+            ], 'license-config-model');
+        }
+
         // Register routes
         if (config('license.mode') === 'server' && config('license.server.enable_api_routes', true)) {
             $this->registerRoutes();
