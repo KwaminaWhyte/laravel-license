@@ -22,7 +22,7 @@ class LicenseConfiguration extends Model
     /**
      * Get the decrypted value
      */
-    public function getDecryptedValueAttribute(): mixed
+    public function getDecryptedValueAttribute()
     {
         if (!$this->value) {
             return null;
@@ -42,7 +42,7 @@ class LicenseConfiguration extends Model
     /**
      * Set encrypted value
      */
-    public function setEncryptedValue(mixed $value, bool $encrypt = true): void
+    public function setEncryptedValue($value, bool $encrypt = true): void
     {
         $this->is_encrypted = $encrypt;
 
@@ -56,20 +56,24 @@ class LicenseConfiguration extends Model
     /**
      * Cast value to appropriate type
      */
-    protected function castValue(string $value): mixed
+    protected function castValue(string $value)
     {
-        return match($this->type) {
-            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            'integer' => (int) $value,
-            'float' => (float) $value,
-            default => $value,
-        };
+        switch ($this->type) {
+            case 'boolean':
+                return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            case 'integer':
+                return (int) $value;
+            case 'float':
+                return (float) $value;
+            default:
+                return $value;
+        }
     }
 
     /**
      * Get a configuration value
      */
-    public static function get(string $key, mixed $default = null): mixed
+    public static function get(string $key, $default = null)
     {
         $config = static::where('key', $key)->first();
 
@@ -83,7 +87,7 @@ class LicenseConfiguration extends Model
     /**
      * Set a configuration value
      */
-    public static function set(string $key, mixed $value, bool $encrypt = false, string $type = 'string', ?string $description = null): self
+    public static function set(string $key, $value, bool $encrypt = false, string $type = 'string', ?string $description = null): self
     {
         $config = static::firstOrNew(['key' => $key]);
         $config->type = $type;

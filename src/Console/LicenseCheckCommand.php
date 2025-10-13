@@ -302,12 +302,15 @@ class LicenseCheckCommand extends Command
      */
     protected function getStatusColor(string $status): string
     {
-        return match (strtolower($status)) {
+        $colors = [
             'active' => 'green',
             'grace_period' => 'yellow',
-            'expired', 'invalid', 'suspended' => 'red',
+            'expired' => 'red',
+            'invalid' => 'red',
+            'suspended' => 'red',
             'pending' => 'yellow',
-            default => 'gray',
-        };
+        ];
+        
+        return $colors[strtolower($status)] ?? 'gray';
     }
 }
