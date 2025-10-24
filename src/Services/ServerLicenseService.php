@@ -57,8 +57,11 @@ class ServerLicenseService implements LicenseServiceInterface
     ): array {
         $this->setLicenseParams($licenseKey, $hardwareFingerprint, $productId);
 
-        // Find license
-        $license = License::with(['product'])
+        // Find license with all necessary relationships for features
+        $license = License::with([
+            'product',
+            'subscription.plan.planFeatures.productFeature'
+        ])
             ->where('license_key', $licenseKey)
             ->where('product_id', $productId)
             ->first();
@@ -145,9 +148,28 @@ class ServerLicenseService implements LicenseServiceInterface
         // Update last validated timestamp
         $license->update(['last_validated_at' => now()]);
 
+        // Get features from subscription plan
+        $features = [];
+        if ($license->subscription && $license->subscription->plan && $license->subscription->plan->planFeatures) {
+            try {
+                $features = $license->subscription->plan->planFeatures
+                    ->where('is_included', true)
+                    ->map(function ($planFeature) {
+                        return $planFeature->productFeature?->feature_key ?? $planFeature->productFeature?->name;
+                    })
+                    ->filter()
+                    ->values()
+                    ->toArray();
+            } catch (\Exception $e) {
+                Log::debug('Failed to get plan features', ['error' => $e->getMessage()]);
+            }
+        }
+
         return $this->lastValidationResult = [
             'valid' => true,
             'status' => 'active',
+            'features' => $features,
+            'structured_features' => [],
             'license' => $this->formatLicenseResponse($license),
             'offline_token' => $this->generateOfflineToken($license, $hardwareFingerprint),
             'next_validation' => now()->addHours(24)->toISOString()
