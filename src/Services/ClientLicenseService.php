@@ -943,4 +943,163 @@ class ClientLicenseService implements LicenseServiceInterface
                 break;
         }
     }
+
+    /**
+     * Get usage statistics from server
+     *
+     * @param int $days Number of days to retrieve stats for (default: 30)
+     * @return array
+     * @throws LicenseException
+     */
+    public function getUsageStats(int $days = 30): array
+    {
+        try {
+            $response = $this->httpClient->post('api/license/usage-stats', [
+                'json' => [
+                    'license_key' => $this->config['license_key'],
+                    'days' => $days,
+                ],
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            $this->log('info', 'Usage statistics retrieved successfully', [
+                'days' => $days,
+            ]);
+
+            return $data;
+        } catch (GuzzleException $e) {
+            $this->log('error', 'Failed to retrieve usage statistics', [
+                'error' => $e->getMessage()
+            ]);
+
+            // Return empty stats on failure
+            return [
+                'total_events' => 0,
+                'api_requests_today' => 0,
+                'popular_features' => [],
+                'daily_usage' => [],
+            ];
+        }
+    }
+
+    /**
+     * Get validation statistics from server
+     *
+     * @param int $days Number of days to retrieve stats for (default: 30)
+     * @return array
+     * @throws LicenseException
+     */
+    public function getValidationStats(int $days = 30): array
+    {
+        try {
+            $response = $this->httpClient->post('api/license/validation-stats-detailed', [
+                'json' => [
+                    'license_key' => $this->config['license_key'],
+                    'days' => $days,
+                ],
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            $this->log('info', 'Validation statistics retrieved successfully', [
+                'days' => $days,
+            ]);
+
+            return $data;
+        } catch (GuzzleException $e) {
+            $this->log('error', 'Failed to retrieve validation statistics', [
+                'error' => $e->getMessage()
+            ]);
+
+            // Return empty stats on failure
+            return [
+                'total_validations_30d' => 0,
+                'successful_validations_30d' => 0,
+                'failed_validations_30d' => 0,
+                'success_rate_30d' => 0,
+                'last_validation_at' => null,
+                'active_devices' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Log a validation event to the server
+     *
+     * @param string $validationType Type of validation (online, offline, jwt, cache)
+     * @param string $result Result of validation (success, failed)
+     * @param string|null $clientIdentifier Optional client identifier
+     * @param array|null $context Optional additional context
+     * @return bool
+     */
+    public function logValidation(
+        string $validationType,
+        string $result,
+        ?string $clientIdentifier = null,
+        ?array $context = null
+    ): bool {
+        try {
+            $this->httpClient->post('api/license/log-validation', [
+                'json' => [
+                    'license_key' => $this->config['license_key'],
+                    'hardware_fingerprint' => $this->getHardwareFingerprint(),
+                    'validation_type' => $validationType,
+                    'result' => $result,
+                    'client_identifier' => $clientIdentifier,
+                    'context' => $context,
+                ],
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            $this->log('warning', 'Failed to log validation to server', [
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Log a usage event to the server
+     *
+     * @param string $eventType Type of event (feature_access, api_request, page_view)
+     * @param string|null $featureKey Feature key being accessed
+     * @param string|null $action Action being performed (create, read, update, delete)
+     * @param string|null $clientIdentifier Optional client identifier
+     * @param string|null $userId Optional user ID
+     * @param array|null $metadata Optional additional metadata
+     * @return bool
+     */
+    public function logUsage(
+        string $eventType,
+        ?string $featureKey = null,
+        ?string $action = null,
+        ?string $clientIdentifier = null,
+        ?string $userId = null,
+        ?array $metadata = null
+    ): bool {
+        try {
+            $this->httpClient->post('api/license/log-usage', [
+                'json' => [
+                    'license_key' => $this->config['license_key'],
+                    'event_type' => $eventType,
+                    'feature_key' => $featureKey,
+                    'action' => $action,
+                    'client_identifier' => $clientIdentifier,
+                    'user_id' => $userId,
+                    'metadata' => $metadata,
+                ],
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            $this->log('warning', 'Failed to log usage event to server', [
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
+    }
 }

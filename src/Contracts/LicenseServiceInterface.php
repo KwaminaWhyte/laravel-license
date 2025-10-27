@@ -53,4 +53,36 @@ interface LicenseServiceInterface
      * Get days until license expiry
      */
     public function getDaysUntilExpiry(): ?int;
+
+    /**
+     * Get usage statistics from server
+     */
+    public function getUsageStats(int $days = 30): array;
+
+    /**
+     * Get validation statistics from server
+     */
+    public function getValidationStats(int $days = 30): array;
+
+    /**
+     * Log a validation event to the server
+     */
+    public function logValidation(
+        string $validationType,
+        string $result,
+        ?string $clientIdentifier = null,
+        ?array $context = null
+    ): bool;
+
+    /**
+     * Log a usage event to the server
+     */
+    public function logUsage(
+        string $eventType,
+        ?string $featureKey = null,
+        ?string $action = null,
+        ?string $clientIdentifier = null,
+        ?string $userId = null,
+        ?array $metadata = null
+    ): bool;
 }
