@@ -64,7 +64,7 @@ class ServerLicenseService implements LicenseServiceInterface
             ->first();
 
         if (!$license) {
-            $this->logValidation(null, $hardwareFingerprint, 'online', 'invalid', $request);
+            $this->logValidationInternal(null, $hardwareFingerprint, 'online', 'invalid', $request);
             return $this->lastValidationResult = [
                 'valid' => false,
                 'error' => 'License not found',
@@ -76,7 +76,7 @@ class ServerLicenseService implements LicenseServiceInterface
 
         // Check license status
         if (!$license->isActive()) {
-            $this->logValidation($license->id, $hardwareFingerprint, 'online', 'inactive', $request);
+            $this->logValidationInternal($license->id, $hardwareFingerprint, 'online', 'inactive', $request);
             return $this->lastValidationResult = [
                 'valid' => false,
                 'error' => 'License is not active',
@@ -89,7 +89,7 @@ class ServerLicenseService implements LicenseServiceInterface
         if ($license->isExpired()) {
             // Check if in grace period
             if ($license->isInGracePeriod()) {
-                $this->logValidation($license->id, $hardwareFingerprint, 'online', 'success', $request, [
+                $this->logValidationInternal($license->id, $hardwareFingerprint, 'online', 'success', $request, [
                     'grace_period' => true,
                     'days_expired' => abs($license->getDaysUntilExpiry())
                 ]);
@@ -106,7 +106,7 @@ class ServerLicenseService implements LicenseServiceInterface
                 ];
             }
 
-            $this->logValidation($license->id, $hardwareFingerprint, 'online', 'expired', $request);
+            $this->logValidationInternal($license->id, $hardwareFingerprint, 'online', 'expired', $request);
             return $this->lastValidationResult = [
                 'valid' => false,
                 'error' => 'License has expired',
@@ -126,7 +126,7 @@ class ServerLicenseService implements LicenseServiceInterface
         } else {
             // Check if we can create a new activation
             if (!$license->canActivate($hardwareFingerprint)) {
-                $this->logValidation($license->id, $hardwareFingerprint, 'online', 'limit_exceeded', $request);
+                $this->logValidationInternal($license->id, $hardwareFingerprint, 'online', 'limit_exceeded', $request);
                 return $this->lastValidationResult = [
                     'valid' => false,
                     'error' => 'Activation limit exceeded',
@@ -140,7 +140,7 @@ class ServerLicenseService implements LicenseServiceInterface
             $this->createActivation($license, $hardwareFingerprint, $systemInfo);
         }
 
-        $this->logValidation($license->id, $hardwareFingerprint, 'online', 'success', $request);
+        $this->logValidationInternal($license->id, $hardwareFingerprint, 'online', 'success', $request);
 
         // Update last validated timestamp
         $license->update(['last_validated_at' => now()]);
@@ -323,7 +323,7 @@ class ServerLicenseService implements LicenseServiceInterface
         }
 
         $activation->updateHeartbeat();
-        $this->logValidation($license->id, $hardwareFingerprint, 'heartbeat', 'success', $request);
+        $this->logValidationInternal($license->id, $hardwareFingerprint, 'heartbeat', 'success', $request);
 
         return [
             'valid' => true,
@@ -613,9 +613,9 @@ class ServerLicenseService implements LicenseServiceInterface
     }
 
     /**
-     * Log validation attempt
+     * Log validation attempt (internal server method)
      */
-    protected function logValidation(
+    protected function logValidationInternal(
         ?string $licenseId,
         string $hardwareFingerprint,
         string $type,
@@ -809,5 +809,79 @@ class ServerLicenseService implements LicenseServiceInterface
         $this->productId = $license->product_id;
 
         return $this;
+    }
+
+    /**
+     * Get usage statistics from server
+     * Note: This method is only applicable for client mode.
+     * Server mode should query the database directly.
+     *
+     * @param int $days
+     * @return array
+     * @throws \RuntimeException
+     */
+    public function getUsageStats(int $days = 30): array
+    {
+        throw new \RuntimeException('getUsageStats() is not available in server mode. Use the model directly: LicenseUsageEvent::getStatsForLicense()');
+    }
+
+    /**
+     * Get validation statistics from server
+     * Note: This method is only applicable for client mode.
+     * Server mode should query the database directly.
+     *
+     * @param int $days
+     * @return array
+     * @throws \RuntimeException
+     */
+    public function getValidationStats(int $days = 30): array
+    {
+        throw new \RuntimeException('getValidationStats() is not available in server mode. Use the model directly: LicenseValidation::getStatsForLicense()');
+    }
+
+    /**
+     * Log a validation event to the server
+     * Note: This method has a different signature in server mode.
+     * Use the protected logValidationInternal() method instead.
+     *
+     * @param string $validationType
+     * @param string $result
+     * @param string|null $clientIdentifier
+     * @param array|null $context
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function logValidation(
+        string $validationType,
+        string $result,
+        ?string $clientIdentifier = null,
+        ?array $context = null
+    ): bool {
+        throw new \RuntimeException('This logValidation() signature is for client mode. In server mode, use the protected logValidationInternal() method with the full signature.');
+    }
+
+    /**
+     * Log a usage event to the server
+     * Note: This method is only applicable for client mode.
+     * Server mode logs usage events directly via the LicenseUsageEvent model.
+     *
+     * @param string $eventType
+     * @param string|null $featureKey
+     * @param string|null $action
+     * @param string|null $clientIdentifier
+     * @param string|null $userId
+     * @param array|null $metadata
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function logUsage(
+        string $eventType,
+        ?string $featureKey = null,
+        ?string $action = null,
+        ?string $clientIdentifier = null,
+        ?string $userId = null,
+        ?array $metadata = null
+    ): bool {
+        throw new \RuntimeException('logUsage() is not available in server mode. Use LicenseUsageEvent::create() directly.');
     }
 }
