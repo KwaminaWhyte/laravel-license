@@ -5,7 +5,6 @@ namespace Westel\License\Services;
 use Westel\License\Contracts\LicenseServiceInterface;
 use Westel\License\Models\License;
 use Westel\License\Models\LicenseActivation;
-use Westel\License\Models\LicenseValidation;
 use Illuminate\Http\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -29,6 +28,7 @@ class ServerLicenseService implements LicenseServiceInterface
             'offline_validation_days' => config('license.server.offline_validation_days', 30),
             'default_activation_limit' => config('license.server.default_activation_limit', 5),
             'log_validations' => config('license.logging.log_validations', true),
+            'validation_model' => config('license.server.validation_model', 'App\\Models\\LicenseValidation'),
         ], $config);
     }
 
@@ -627,7 +627,17 @@ class ServerLicenseService implements LicenseServiceInterface
             return;
         }
 
-        LicenseValidation::logValidation(
+        $validationModelClass = $this->config['validation_model'];
+
+        // Check if the model class exists
+        if (!class_exists($validationModelClass)) {
+            Log::warning('LicenseValidation model not found, skipping validation logging', [
+                'model' => $validationModelClass,
+            ]);
+            return;
+        }
+
+        $validationModelClass::logValidation(
             $licenseId,
             $hardwareFingerprint,
             $type,
@@ -836,7 +846,7 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     public function getValidationStats(int $days = 30): array
     {
-        throw new \RuntimeException('getValidationStats() is not available in server mode. Use the model directly: LicenseValidation::getStatsForLicense()');
+        throw new \RuntimeException('getValidationStats() is not available in server mode. Use the model directly: App\\Models\\LicenseValidation::getStatsForLicense()');
     }
 
     /**
