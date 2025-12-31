@@ -77,8 +77,15 @@ class Product extends Model
             return true;
         }
 
-        // Fallback to legacy features array
-        return in_array($feature, $this->features ?? []);
+        // Fallback to legacy features array for backward compatibility
+        $legacyFeatures = $this->features ?? [];
+
+        // Only check legacy features if it's an indexed array of strings
+        if (!empty($legacyFeatures) && array_is_list($legacyFeatures)) {
+            return in_array($feature, $legacyFeatures);
+        }
+
+        return false;
     }
 
     public function getFeaturesList(): array
@@ -92,6 +99,12 @@ class Product extends Model
 
         // Get legacy features
         $legacyFeatures = $this->features ?? [];
+
+        // If legacy features is an associative array (metadata), return only assigned features
+        // Legacy features should be an indexed array of feature key strings
+        if (!empty($legacyFeatures) && !array_is_list($legacyFeatures)) {
+            return $assignedFeatures;
+        }
 
         // Merge and deduplicate
         return array_unique(array_merge($assignedFeatures, $legacyFeatures));
