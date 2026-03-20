@@ -59,9 +59,44 @@ class License extends Model
         return $this->hasMany(LicenseActivation::class)->where('is_active', true);
     }
 
-    public static function generateLicenseKey(): string
+    public static function generateLicenseKey(?string $prefix = null, ?string $suffix = null): string
     {
-        return strtoupper(Str::random(8) . '-' . Str::random(8) . '-' . Str::random(8) . '-' . Str::random(8));
+        $normalizedPrefix = static::normalizeKeySegment($prefix, 8, 'WESL');
+        $normalizedSuffix = static::normalizeKeySegment($suffix, 4, null);
+
+        do {
+            $core = strtoupper(implode('-', [
+                Str::upper(Str::random(4)),
+                Str::upper(Str::random(4)),
+                Str::upper(Str::random(4)),
+                Str::upper(Str::random(4)),
+            ]));
+
+            $licenseKey = $normalizedPrefix . '-' . $core;
+
+            if ($normalizedSuffix) {
+                $licenseKey .= '-' . $normalizedSuffix;
+            }
+        } while (static::query()->where('license_key', $licenseKey)->exists());
+
+        return $licenseKey;
+    }
+
+    protected static function normalizeKeySegment(?string $segment, int $maxLength, ?string $fallback = null): ?string
+    {
+        $candidate = $segment !== null ? $segment : $fallback;
+
+        if ($candidate === null) {
+            return null;
+        }
+
+        $candidate = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $candidate) ?? '');
+
+        if ($candidate === '') {
+            return $fallback !== null ? static::normalizeKeySegment($fallback, $maxLength, null) : null;
+        }
+
+        return substr($candidate, 0, $maxLength);
     }
 
     public function isActive(): bool
@@ -100,7 +135,7 @@ class License extends Model
             return null;
         }
 
-        return Carbon::now()->diffInDays($this->expires_at, false);
+        return (int) Carbon::now()->diffInDays($this->expires_at, false);
     }
 
     public function isInGracePeriod(): bool

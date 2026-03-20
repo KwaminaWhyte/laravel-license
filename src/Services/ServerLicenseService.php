@@ -35,7 +35,7 @@ class ServerLicenseService implements LicenseServiceInterface
     /**
      * Set license parameters for validation
      */
-    public function setLicenseParams(string $licenseKey, string $hardwareFingerprint, string $productId): self
+    public function setLicenseParams(string $licenseKey, string $hardwareFingerprint, ?string $productId = null): self
     {
         $this->licenseKey = $licenseKey;
         $this->hardwareFingerprint = $hardwareFingerprint;
@@ -51,17 +51,14 @@ class ServerLicenseService implements LicenseServiceInterface
     public function validateLicense(
         string $licenseKey,
         string $hardwareFingerprint,
-        string $productId,
+        ?string $productId = null,
         ?array $systemInfo = null,
         ?Request $request = null
     ): array {
         $this->setLicenseParams($licenseKey, $hardwareFingerprint, $productId);
 
         // Find license
-        $license = License::with(['product'])
-            ->where('license_key', $licenseKey)
-            ->where('product_id', $productId)
-            ->first();
+        $license = $this->findLicenseByKey($licenseKey);
 
         if (!$license) {
             $this->logValidationInternal(null, $hardwareFingerprint, 'online', 'invalid', $request);
@@ -98,9 +95,13 @@ class ServerLicenseService implements LicenseServiceInterface
                     'valid' => true,
                     'status' => 'grace_period',
                     'message' => 'License expired but in grace period',
-                    'grace_period_days' => $license->product->grace_period_days ?? $this->config['grace_period_days'],
+                    'grace_period_days' => $license->product?->grace_period_days ?? $this->config['grace_period_days'],
                     'days_expired' => abs($license->getDaysUntilExpiry()),
                     'license' => $this->formatLicenseResponse($license),
+                    'tier' => $this->resolveLicenseTier($license),
+                    'tier_label' => $this->resolveLicenseTierLabel($license),
+                    'features' => $license->product?->getFeaturesList() ?? [],
+                    'structured_features' => $license->product?->getStructuredFeatures() ?? [],
                     'offline_token' => $this->generateOfflineToken($license, $hardwareFingerprint),
                     'next_validation' => now()->addHours(24)->toISOString()
                 ];
@@ -149,6 +150,10 @@ class ServerLicenseService implements LicenseServiceInterface
             'valid' => true,
             'status' => 'active',
             'license' => $this->formatLicenseResponse($license),
+            'tier' => $this->resolveLicenseTier($license),
+            'tier_label' => $this->resolveLicenseTierLabel($license),
+            'features' => $license->product?->getFeaturesList() ?? [],
+            'structured_features' => $license->product?->getStructuredFeatures() ?? [],
             'offline_token' => $this->generateOfflineToken($license, $hardwareFingerprint),
             'next_validation' => now()->addHours(24)->toISOString()
         ];
@@ -159,7 +164,7 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     public function validate(): array
     {
-        if (!$this->licenseKey || !$this->hardwareFingerprint || !$this->productId) {
+        if (!$this->licenseKey || !$this->hardwareFingerprint) {
             return [
                 'valid' => false,
                 'error' => 'License parameters not set. Call setLicenseParams() first.',
@@ -192,13 +197,10 @@ class ServerLicenseService implements LicenseServiceInterface
     public function activateLicense(
         string $licenseKey,
         string $hardwareFingerprint,
-        string $productId,
+        ?string $productId = null,
         ?array $systemInfo = null
     ): array {
-        $license = License::with(['product'])
-            ->where('license_key', $licenseKey)
-            ->where('product_id', $productId)
-            ->first();
+        $license = $this->findLicenseByKey($licenseKey);
 
         if (!$license) {
             return [
@@ -245,6 +247,11 @@ class ServerLicenseService implements LicenseServiceInterface
             'success' => true,
             'activation_id' => $activation->id,
             'message' => 'License successfully activated on this device',
+            'tier' => $this->resolveLicenseTier($license),
+            'tier_label' => $this->resolveLicenseTierLabel($license),
+            'features' => $license->product?->getFeaturesList() ?? [],
+            'structured_features' => $license->product?->getStructuredFeatures() ?? [],
+            'license' => $this->formatLicenseResponse($license),
             'offline_token' => $this->generateOfflineToken($license, $hardwareFingerprint)
         ];
     }
@@ -297,9 +304,7 @@ class ServerLicenseService implements LicenseServiceInterface
             Log::info("Heartbeat validation for license: {$licenseKey}, hardware: {$hardwareFingerprint}");
         }
 
-        $license = License::with(['product'])
-            ->where('license_key', $licenseKey)
-            ->first();
+        $license = $this->findLicenseByKey($licenseKey);
 
         if (!$license) {
             return [
@@ -329,8 +334,10 @@ class ServerLicenseService implements LicenseServiceInterface
             'valid' => true,
             'status' => $license->status,
             'expires_at' => $license->expires_at?->toISOString(),
-            'features' => $license->product->getFeaturesList(),
-            'structured_features' => $license->product->getStructuredFeatures(),
+            'tier' => $this->resolveLicenseTier($license),
+            'tier_label' => $this->resolveLicenseTierLabel($license),
+            'features' => $license->product?->getFeaturesList() ?? [],
+            'structured_features' => $license->product?->getStructuredFeatures() ?? [],
             'license' => $this->formatLicenseResponse($license)
         ];
     }
@@ -349,9 +356,7 @@ class ServerLicenseService implements LicenseServiceInterface
             ];
         }
 
-        $license = License::with(['product', 'activations'])
-            ->where('license_key', $key)
-            ->first();
+        $license = $this->findLicenseByKey($key, ['product', 'activations']);
 
         if (!$license) {
             return [
@@ -364,6 +369,10 @@ class ServerLicenseService implements LicenseServiceInterface
 
         return [
             'found' => true,
+            'tier' => $this->resolveLicenseTier($license),
+            'tier_label' => $this->resolveLicenseTierLabel($license),
+            'features' => $license->product?->getFeaturesList() ?? [],
+            'structured_features' => $license->product?->getStructuredFeatures() ?? [],
             'license' => $this->formatLicenseResponse($license),
             'activations' => $license->activations->map(function ($activation) {
                 return [
@@ -510,10 +519,14 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     protected function generateOfflineToken(License $license, string $hardwareFingerprint): string
     {
-        $offlineDays = $license->product->offline_validation_days ?? $this->config['offline_validation_days'];
+        $offlineDays = $license->product?->offline_validation_days ?? $this->config['offline_validation_days'];
         $expiry = $license->expires_at
             ? min($license->expires_at->timestamp, now()->addDays($offlineDays)->timestamp)
             : now()->addDays($offlineDays)->timestamp;
+        $features = $license->product?->getFeaturesList() ?? [];
+        $structuredFeatures = $license->product?->getStructuredFeatures() ?? [];
+        $tier = $this->resolveLicenseTier($license);
+        $tierLabel = $this->resolveLicenseTierLabel($license);
 
         $payload = [
             'iss' => config('app.url'),
@@ -523,10 +536,12 @@ class ServerLicenseService implements LicenseServiceInterface
             'license_id' => $license->id,
             'license_key' => $license->license_key,
             'product_id' => $license->product_id,
-            'features' => $license->product->getFeaturesList(),
-            'structured_features' => $license->product->getStructuredFeatures(),
+            'tier' => $tier,
+            'tier_label' => $tierLabel,
+            'features' => $features,
+            'structured_features' => $structuredFeatures,
             'hardware_fingerprint' => $hardwareFingerprint,
-            'grace_period_days' => $license->product->grace_period_days ?? $this->config['grace_period_days'],
+            'grace_period_days' => $license->product?->grace_period_days ?? $this->config['grace_period_days'],
             'status' => $license->status
         ];
 
@@ -555,6 +570,8 @@ class ServerLicenseService implements LicenseServiceInterface
                 'status' => $decoded->status ?? 'active',
                 'license_key' => $decoded->license_key,
                 'product_id' => $decoded->product_id,
+                'tier' => $decoded->tier ?? 'unknown',
+                'tier_label' => $decoded->tier_label ?? 'Unknown',
                 'features' => $decoded->features,
                 'structured_features' => $decoded->structured_features ?? [],
                 'expires_at' => date('c', $decoded->exp),
@@ -653,12 +670,17 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     protected function formatLicenseResponse(License $license): array
     {
-        $features = $license->getAvailableFeatures();
+        $features = $license->product?->getFeaturesList() ?? [];
+        $structuredFeatures = $license->product?->getStructuredFeatures() ?? [];
+        $tier = $this->resolveLicenseTier($license);
+        $tierLabel = $this->resolveLicenseTierLabel($license);
 
         return [
             'id' => $license->id,
             'license_key' => $license->license_key,
             'status' => $license->status,
+            'tier' => $tier,
+            'tier_label' => $tierLabel,
             'activated_at' => $license->activated_at?->toISOString(),
             'expires_at' => $license->expires_at?->toISOString(),
             'activation_limit' => $license->activation_limit,
@@ -667,13 +689,44 @@ class ServerLicenseService implements LicenseServiceInterface
             'is_expired' => $license->isExpired(),
             'is_in_grace_period' => $license->isExpired() && $license->isInGracePeriod(),
             'product' => [
-                'id' => $license->product->id,
-                'name' => $license->product->name,
-                'version' => $license->product->version,
+                'id' => $license->product?->id,
+                'name' => $license->product?->name,
+                'version' => $license->product?->version,
+                'tier' => $tier,
+                'tier_label' => $tierLabel,
                 'features' => $features,
-                'structured_features' => $license->product->getStructuredFeatures(),
+                'structured_features' => $structuredFeatures,
             ],
         ];
+    }
+
+    /**
+     * Find a license by its unique key.
+     */
+    protected function findLicenseByKey(string $licenseKey): ?License
+    {
+        return License::with(['product', 'activations'])
+            ->where('license_key', $licenseKey)
+            ->first();
+    }
+
+    /**
+     * Resolve a stable tier identifier for a license.
+     */
+    protected function resolveLicenseTier(License $license): string
+    {
+        $candidate = $license->product?->slug ?? $license->product?->name ?? 'unknown';
+        $normalized = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $candidate) ?? '');
+
+        return trim($normalized, '-') ?: 'unknown';
+    }
+
+    /**
+     * Resolve a human-readable tier label for a license.
+     */
+    protected function resolveLicenseTierLabel(License $license): string
+    {
+        return $license->product?->name ?? 'Unknown';
     }
 
     /**
@@ -681,6 +734,10 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     protected function getFeatureConfiguration(License $license, string $featureKey): ?array
     {
+        if (!$license->product) {
+            return null;
+        }
+
         // Get from new feature system first
         $assignment = $license->product->featureAssignments()
             ->whereHas('featureDefinition', function ($query) use ($featureKey) {
@@ -766,6 +823,10 @@ class ServerLicenseService implements LicenseServiceInterface
      */
     protected function getLicenseFeatures(License $license): array
     {
+        if (!$license->product) {
+            return [];
+        }
+
         $features = [];
 
         // Get structured features from new system

@@ -48,7 +48,7 @@ class LicenseApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'license_key' => 'required|string|min:20|max:50',
                 'hardware_fingerprint' => 'required|string',
-                'product_id' => 'required|string',
+                'product_id' => 'nullable|string',
                 'system_info' => 'array|nullable',
             ]);
 
@@ -63,7 +63,7 @@ class LicenseApiController extends Controller
             $result = $this->licenseService->validateLicense(
                 $validated['license_key'],
                 $validated['hardware_fingerprint'],
-                $validated['product_id'],
+                $validated['product_id'] ?? null,
                 $validated['system_info'] ?? null,
                 $request
             );
@@ -88,7 +88,7 @@ class LicenseApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'license_key' => 'required|string',
                 'hardware_fingerprint' => 'required|string',
-                'product_id' => 'required|string',
+                'product_id' => 'nullable|string',
                 'system_info' => 'array|nullable',
             ]);
 
@@ -103,7 +103,7 @@ class LicenseApiController extends Controller
             $result = $this->licenseService->activateLicense(
                 $validated['license_key'],
                 $validated['hardware_fingerprint'],
-                $validated['product_id'],
+                $validated['product_id'] ?? null,
                 $validated['system_info'] ?? null
             );
 
@@ -302,6 +302,8 @@ class LicenseApiController extends Controller
 
             return response()->json([
                 'license_key' => $licenseKey,
+                'tier' => $license->product?->slug ?: \Illuminate\Support\Str::slug($license->product?->name ?? 'unknown'),
+                'tier_label' => $license->product?->name ?? 'Unknown',
                 'features' => $features,
                 'features_count' => count($features),
                 'license_status' => $license->status,
@@ -396,11 +398,15 @@ class LicenseApiController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(function ($product) {
+                    $tier = $product->slug ?: \Illuminate\Support\Str::slug($product->name);
+
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
                         'version' => $product->version,
                         'description' => $product->description,
+                        'tier' => $tier,
+                        'tier_label' => $product->name,
                         'features' => $product->getFeaturesList(),
                         'structured_features' => $product->getStructuredFeatures(),
                         'features_count' => $product->features_count,

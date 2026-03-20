@@ -220,13 +220,18 @@ class ClientLicenseService implements LicenseServiceInterface
     protected function validateOnline(): array
     {
         try {
+            $payload = [
+                'license_key' => $this->config['license_key'],
+                'hardware_fingerprint' => $this->getHardwareFingerprint(),
+                'system_info' => $this->getSystemInfo(),
+            ];
+
+            if (!empty($this->config['product_id'])) {
+                $payload['product_id'] = $this->config['product_id'];
+            }
+
             $response = $this->httpClient->post('api/license/validate', [
-                'json' => [
-                    'license_key' => $this->config['license_key'],
-                    'product_id' => $this->config['product_id'] ?? null,
-                    'hardware_fingerprint' => $this->getHardwareFingerprint(),
-                    'system_info' => $this->getSystemInfo(),
-                ],
+                'json' => $payload,
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
@@ -491,9 +496,14 @@ class ClientLicenseService implements LicenseServiceInterface
                 'is_expired' => $result['is_expired'] ?? false,
                 'in_grace_period' => $result['in_grace_period'] ?? false,
                 'expires_at' => $result['expires_at'] ?? null,
+                'tier' => $result['tier'] ?? null,
+                'tier_label' => $result['tier_label'] ?? null,
+                'plan' => $result['plan'] ?? null,
                 'product' => $result['product'] ?? null,
                 'customer' => $result['customer'] ?? null,
                 'features' => $result['features'] ?? [],
+                'structured_features' => $result['structured_features'] ?? [],
+                'license' => $result['license'] ?? null,
             ];
         } catch (LicenseException $e) {
             // Return cached info if available
@@ -585,13 +595,18 @@ class ClientLicenseService implements LicenseServiceInterface
     public function activate(): array
     {
         try {
+            $payload = [
+                'license_key' => $this->config['license_key'],
+                'hardware_fingerprint' => $this->getHardwareFingerprint(),
+                'system_info' => $this->getSystemInfo(),
+            ];
+
+            if (!empty($this->config['product_id'])) {
+                $payload['product_id'] = $this->config['product_id'];
+            }
+
             $response = $this->httpClient->post('api/license/activate', [
-                'json' => [
-                    'license_key' => $this->config['license_key'],
-                    'product_id' => $this->config['product_id'] ?? null,
-                    'hardware_fingerprint' => $this->getHardwareFingerprint(),
-                    'system_info' => $this->getSystemInfo(),
-                ],
+                'json' => $payload,
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);

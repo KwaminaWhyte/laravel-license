@@ -34,7 +34,7 @@ class LicenseSettingsController extends Controller
         $validated = $request->validate([
             'license_key' => 'required|string|min:10|max:255',
             'server_url' => 'required|url',
-            'product_id' => 'required|uuid',
+            'product_id' => 'nullable|uuid',
             'offline_mode' => 'boolean',
         ]);
 
@@ -56,14 +56,18 @@ class LicenseSettingsController extends Controller
             description: 'License server URL'
         );
 
-        // Store product ID
-        LicenseConfiguration::set(
-            'product_id',
-            $validated['product_id'],
-            encrypt: false,
-            type: 'string',
-            description: 'Product ID for license validation'
-        );
+        // Store optional product ID when provided
+        if (!empty($validated['product_id'])) {
+            LicenseConfiguration::set(
+                'product_id',
+                $validated['product_id'],
+                encrypt: false,
+                type: 'string',
+                description: 'Optional product ID for license validation'
+            );
+        } else {
+            LicenseConfiguration::where('key', 'product_id')->delete();
+        }
 
         // Store offline mode
         LicenseConfiguration::set(
@@ -90,21 +94,26 @@ class LicenseSettingsController extends Controller
             $serverUrl = $request->input('server_url') ?? LicenseConfiguration::get('server_url');
             $productId = $request->input('product_id') ?? LicenseConfiguration::get('product_id');
 
-            if (!$licenseKey || !$serverUrl || !$productId) {
+            if (!$licenseKey || !$serverUrl) {
                 return response()->json([
                     'success' => false,
                     'message' => 'License configuration is incomplete',
                 ], 400);
             }
 
+            $payload = [
+                'license_key' => $licenseKey,
+                'hardware_fingerprint' => 'test-connection',
+            ];
+
+            if ($productId) {
+                $payload['product_id'] = $productId;
+            }
+
             // Test connection to license server
             $client = new \GuzzleHttp\Client();
             $response = $client->post("{$serverUrl}/api/license/validate", [
-                'json' => [
-                    'license_key' => $licenseKey,
-                    'hardware_fingerprint' => 'test-connection',
-                    'product_id' => $productId,
-                ],
+                'json' => $payload,
                 'timeout' => 10,
             ]);
 

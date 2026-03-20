@@ -98,7 +98,7 @@ class HardwareFingerprintService
      * @param int $tolerance Tolerance level (0-100, default from config)
      * @return bool True if fingerprints match within tolerance
      */
-    public function compare(string $fp1, string $fp2, int $tolerance = null): bool
+    public function compare(string $fp1, string $fp2, ?int $tolerance = null): bool
     {
         // Exact match
         if ($fp1 === $fp2) {
@@ -701,7 +701,7 @@ class HardwareFingerprintService
      * @param int $returnVar
      * @return false|string
      */
-    protected function safeExec(string $command, array &$output = [], int &$returnVar = null)
+    protected function safeExec(string $command, array &$output = [], ?int &$returnVar = null)
     {
         if (!$this->isExecAvailable()) {
             return false;

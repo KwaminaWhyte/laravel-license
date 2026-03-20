@@ -62,7 +62,7 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
             const response = await axios.post(route('settings.license.test'), {
                 license_key: data.license_key,
                 server_url: data.server_url,
-                product_id: data.product_id,
+                ...(data.product_id ? { product_id: data.product_id } : {}),
             });
 
             setTestResult({
@@ -130,18 +130,17 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
 
                         {/* Product ID */}
                         <div>
-                            <Label htmlFor="product_id">Product ID</Label>
+                            <Label htmlFor="product_id">Product ID (optional)</Label>
                             <Input
                                 id="product_id"
                                 type="text"
                                 className="mt-1"
                                 value={data.product_id}
                                 onChange={(e) => setData('product_id', e.target.value)}
-                                required
                                 placeholder="01234567-89ab-cdef-0123-456789abcdef"
                             />
                             <InputError message={errors.product_id} className="mt-2" />
-                            <p className="mt-1 text-sm text-neutral-500">UUID format product identifier</p>
+                            <p className="mt-1 text-sm text-neutral-500">Optional UUID product identifier for legacy integrations</p>
                         </div>
 
                         {/* Offline Mode */}
@@ -165,7 +164,7 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
                                 type="button"
                                 variant="outline"
                                 onClick={testConnection}
-                                disabled={testing || !data.license_key || !data.server_url || !data.product_id}
+                                disabled={testing || !data.license_key || !data.server_url}
                             >
                                 {testing ? 'Testing...' : 'Test connection'}
                             </Button>
