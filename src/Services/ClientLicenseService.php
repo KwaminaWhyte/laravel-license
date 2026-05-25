@@ -226,10 +226,6 @@ class ClientLicenseService implements LicenseServiceInterface
                 'system_info' => $this->getSystemInfo(),
             ];
 
-            if (!empty($this->config['product_id'])) {
-                $payload['product_id'] = $this->config['product_id'];
-            }
-
             $response = $this->httpClient->post('api/license/validate', [
                 'json' => $payload,
             ]);
@@ -600,10 +596,6 @@ class ClientLicenseService implements LicenseServiceInterface
                 'hardware_fingerprint' => $this->getHardwareFingerprint(),
                 'system_info' => $this->getSystemInfo(),
             ];
-
-            if (!empty($this->config['product_id'])) {
-                $payload['product_id'] = $this->config['product_id'];
-            }
 
             $response = $this->httpClient->post('api/license/activate', [
                 'json' => $payload,

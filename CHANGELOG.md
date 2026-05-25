@@ -2,6 +2,15 @@
 
 All notable changes to `westel/laravel-license` will be documented in this file.
 
+## [1.1.0] - 2026-05-25
+
+### Changed
+- License validation now keys solely off the license key. The `product_id` parameter has been removed from the validate/activate API requests, client payloads, `ServerLicenseService` and `ClientLicenseService`, the client settings UI controller, the install command, and the `LICENSE_PRODUCT_ID` config/env. The internal `License -> Product` relationship (which drives tiers/features) is unchanged.
+
+### Removed
+- `LICENSE_PRODUCT_ID` env var and `license.client.product_id` config key.
+- `product_id` request field on `POST /api/license/validate` and `POST /api/license/activate` (still accepted-and-ignored is no longer the case; it is dropped entirely).
+
 ## [1.0.0] - 2025-01-12
 
 ### Added

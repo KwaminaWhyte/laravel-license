@@ -83,9 +83,6 @@ return [
         // Your license key
         'license_key' => env('LICENSE_KEY'),
 
-        // Optional product ID for legacy integrations
-        'product_id' => env('LICENSE_PRODUCT_ID'),
-
         // Cache TTL in seconds (0 = no cache, null = cache indefinitely)
         'cache_ttl' => (int) env('LICENSE_CACHE_TTL', 86400), // 24 hours
 

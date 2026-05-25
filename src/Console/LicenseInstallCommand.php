@@ -281,12 +281,6 @@ class LicenseInstallCommand extends Command
             $envVars['LICENSE_KEY'] = $licenseKey;
         }
 
-        // Product ID
-        $productId = $this->ask('Product ID (optional)');
-        if ($productId) {
-            $envVars['LICENSE_PRODUCT_ID'] = $productId;
-        }
-
         // Cache TTL
         if ($this->confirm('Configure cache settings?', false)) {
             $cacheTtl = $this->ask('Cache TTL in seconds', config('license.client.cache_ttl', 86400));

@@ -20,7 +20,6 @@ class LicenseSettingsController extends Controller
             'licenseSettings' => [
                 'license_key' => LicenseConfiguration::get('license_key', config('license.license_key')),
                 'server_url' => LicenseConfiguration::get('server_url', config('license.server.url')),
-                'product_id' => LicenseConfiguration::get('product_id', config('license.product_id')),
                 'offline_mode' => LicenseConfiguration::get('offline_mode', config('license.client.offline_validation', true)),
             ],
         ]);
@@ -34,7 +33,6 @@ class LicenseSettingsController extends Controller
         $validated = $request->validate([
             'license_key' => 'required|string|min:10|max:255',
             'server_url' => 'required|url',
-            'product_id' => 'nullable|uuid',
             'offline_mode' => 'boolean',
         ]);
 
@@ -55,19 +53,6 @@ class LicenseSettingsController extends Controller
             type: 'string',
             description: 'License server URL'
         );
-
-        // Store optional product ID when provided
-        if (!empty($validated['product_id'])) {
-            LicenseConfiguration::set(
-                'product_id',
-                $validated['product_id'],
-                encrypt: false,
-                type: 'string',
-                description: 'Optional product ID for license validation'
-            );
-        } else {
-            LicenseConfiguration::where('key', 'product_id')->delete();
-        }
 
         // Store offline mode
         LicenseConfiguration::set(
@@ -92,7 +77,6 @@ class LicenseSettingsController extends Controller
         try {
             $licenseKey = $request->input('license_key') ?? LicenseConfiguration::get('license_key');
             $serverUrl = $request->input('server_url') ?? LicenseConfiguration::get('server_url');
-            $productId = $request->input('product_id') ?? LicenseConfiguration::get('product_id');
 
             if (!$licenseKey || !$serverUrl) {
                 return response()->json([
@@ -105,10 +89,6 @@ class LicenseSettingsController extends Controller
                 'license_key' => $licenseKey,
                 'hardware_fingerprint' => 'test-connection',
             ];
-
-            if ($productId) {
-                $payload['product_id'] = $productId;
-            }
 
             // Test connection to license server
             $client = new \GuzzleHttp\Client();

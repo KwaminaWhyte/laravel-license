@@ -16,7 +16,6 @@ class ServerLicenseService implements LicenseServiceInterface
     protected ?License $license = null;
     protected ?string $licenseKey = null;
     protected ?string $hardwareFingerprint = null;
-    protected ?string $productId = null;
     protected ?array $lastValidationResult = null;
 
     public function __construct(array $config = [])
@@ -35,11 +34,10 @@ class ServerLicenseService implements LicenseServiceInterface
     /**
      * Set license parameters for validation
      */
-    public function setLicenseParams(string $licenseKey, string $hardwareFingerprint, ?string $productId = null): self
+    public function setLicenseParams(string $licenseKey, string $hardwareFingerprint): self
     {
         $this->licenseKey = $licenseKey;
         $this->hardwareFingerprint = $hardwareFingerprint;
-        $this->productId = $productId;
         $this->license = null; // Reset cached license
 
         return $this;
@@ -51,11 +49,10 @@ class ServerLicenseService implements LicenseServiceInterface
     public function validateLicense(
         string $licenseKey,
         string $hardwareFingerprint,
-        ?string $productId = null,
         ?array $systemInfo = null,
         ?Request $request = null
     ): array {
-        $this->setLicenseParams($licenseKey, $hardwareFingerprint, $productId);
+        $this->setLicenseParams($licenseKey, $hardwareFingerprint);
 
         // Find license
         $license = $this->findLicenseByKey($licenseKey);
@@ -174,8 +171,7 @@ class ServerLicenseService implements LicenseServiceInterface
 
         return $this->validateLicense(
             $this->licenseKey,
-            $this->hardwareFingerprint,
-            $this->productId
+            $this->hardwareFingerprint
         );
     }
 
@@ -197,7 +193,6 @@ class ServerLicenseService implements LicenseServiceInterface
     public function activateLicense(
         string $licenseKey,
         string $hardwareFingerprint,
-        ?string $productId = null,
         ?array $systemInfo = null
     ): array {
         $license = $this->findLicenseByKey($licenseKey);
@@ -877,7 +872,6 @@ class ServerLicenseService implements LicenseServiceInterface
     {
         $this->license = $license;
         $this->licenseKey = $license->license_key;
-        $this->productId = $license->product_id;
 
         return $this;
     }

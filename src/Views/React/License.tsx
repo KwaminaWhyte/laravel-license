@@ -24,7 +24,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 type LicenseForm = {
     license_key: string;
     server_url: string;
-    product_id: string;
     offline_mode: boolean;
 };
 
@@ -39,7 +38,6 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
     const { data, setData, put, errors, processing, recentlySuccessful } = useForm<LicenseForm>({
         license_key: licenseSettings.license_key || '',
         server_url: licenseSettings.server_url || 'http://localhost:8001',
-        product_id: licenseSettings.product_id || '',
         offline_mode: licenseSettings.offline_mode ?? true,
     });
 
@@ -62,7 +60,6 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
             const response = await axios.post(route('settings.license.test'), {
                 license_key: data.license_key,
                 server_url: data.server_url,
-                ...(data.product_id ? { product_id: data.product_id } : {}),
             });
 
             setTestResult({
@@ -128,20 +125,6 @@ export default function License({ licenseSettings }: LicenseSettingsProps) {
                             </p>
                         </div>
 
-                        {/* Product ID */}
-                        <div>
-                            <Label htmlFor="product_id">Product ID (optional)</Label>
-                            <Input
-                                id="product_id"
-                                type="text"
-                                className="mt-1"
-                                value={data.product_id}
-                                onChange={(e) => setData('product_id', e.target.value)}
-                                placeholder="01234567-89ab-cdef-0123-456789abcdef"
-                            />
-                            <InputError message={errors.product_id} className="mt-2" />
-                            <p className="mt-1 text-sm text-neutral-500">Optional UUID product identifier for legacy integrations</p>
-                        </div>
 
                         {/* Offline Mode */}
                         <div className="flex items-center justify-between rounded-lg border p-4">

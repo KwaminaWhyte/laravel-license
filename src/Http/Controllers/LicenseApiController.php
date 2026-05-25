@@ -48,7 +48,6 @@ class LicenseApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'license_key' => 'required|string|min:20|max:50',
                 'hardware_fingerprint' => 'required|string',
-                'product_id' => 'nullable|string',
                 'system_info' => 'array|nullable',
             ]);
 
@@ -63,7 +62,6 @@ class LicenseApiController extends Controller
             $result = $this->licenseService->validateLicense(
                 $validated['license_key'],
                 $validated['hardware_fingerprint'],
-                $validated['product_id'] ?? null,
                 $validated['system_info'] ?? null,
                 $request
             );
@@ -88,7 +86,6 @@ class LicenseApiController extends Controller
             $validator = Validator::make($request->all(), [
                 'license_key' => 'required|string',
                 'hardware_fingerprint' => 'required|string',
-                'product_id' => 'nullable|string',
                 'system_info' => 'array|nullable',
             ]);
 
@@ -103,7 +100,6 @@ class LicenseApiController extends Controller
             $result = $this->licenseService->activateLicense(
                 $validated['license_key'],
                 $validated['hardware_fingerprint'],
-                $validated['product_id'] ?? null,
                 $validated['system_info'] ?? null
             );
 

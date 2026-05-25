@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('license_configurations', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique(); // 'license_key', 'server_url', 'product_id', etc.
+            $table->string('key')->unique(); // 'license_key', 'server_url', etc.
             $table->text('value')->nullable(); // Encrypted value
             $table->string('type')->default('string'); // string, boolean, integer
             $table->boolean('is_encrypted')->default(false);
